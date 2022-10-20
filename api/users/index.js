@@ -16,7 +16,17 @@ export const create = async (ctx) => {
 
   try {
     const { password, ...user } = await prisma.user.create({ data })
-    ctx.body = user
+
+    const accessToken = jwt.sign({
+      sub: user.id,
+      name: user.name,
+      expiresIn: "7d",
+    }, process.env.JWT_SECRET)
+
+    ctx.body = {
+      user: user,
+      accessToken
+    }
     ctx.status = 201
   } catch (error) {
     console.log(error)
@@ -24,20 +34,6 @@ export const create = async (ctx) => {
     ctx.status = 500
   }
 }
-
-
-//  Listar os usuários:
-// export const list = async ctx => {
-//   try {
-//     const { password, ...users } = await prisma.user.findMany()
-//     ctx.body = users
-//     ctx.status = 200
-//   } catch (error) {
-//     console.log(error)
-//     ctx.body = error
-//     ctx.status = 500
-//   }
-// }
 
 export const login = async ctx => {
   const [type, token] = ctx.headers.authorization.split(" ")
